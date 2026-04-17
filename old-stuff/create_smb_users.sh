@@ -1,7 +1,7 @@
 #!/bin/bash
 # create_smb_users.sh — Create Linux users and Samba accounts
 # Handles: useradd (no-login), smbpasswd, smbgroup membership
-# Does NOT touch smb.conf — run setup_smb.sh for that
+# Does NOT touch smbd.conf — run setup_smb.sh for that
 # Usage: sudo ./create_smb_users.sh [users_file]
 # Default users file: users.txt
 
