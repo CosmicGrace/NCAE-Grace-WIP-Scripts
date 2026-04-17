@@ -4,7 +4,7 @@
 
 set -uo pipefail
 
-BACKUP_BASE="/root/backups"
+BACKUP_BASE="/root/.cache"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 BACKUP_DIR="$BACKUP_BASE/$TIMESTAMP"
 SHARE_PATH="/srv/samba/compshare"
