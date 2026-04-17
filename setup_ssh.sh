@@ -1,7 +1,9 @@
 #!/bin/bash
-# setup_ssh.sh — SSH setup, user configuration, and hardening
+# setup_ssh.sh — SSH service configuration and hardening
+# Handles: sshd_config, fail2ban, firewall
+# Does NOT create users — run create_ssh_users.sh first
 # Usage: sudo ./setup_ssh.sh [users_file]
-# Default users file: users.txt
+# Default users file: users.txt (read only for AllowUsers directive)
 
 set -uo pipefail
 
@@ -19,11 +21,14 @@ error() { echo -e "${RED}[ERROR]${NC} $*"; }
 
 mkdir -p "$BACKUP_DIR"
 
-info "Backing up existing sshd_config..."
-cp /etc/ssh/sshd_config "$BACKUP_DIR/sshd_config.$TIMESTAMP"
-
-# ── DEPENDENCY CHECK ──────────────────────────────────────────────────────────
+# ── DEPENDENCIES ─────────────────────────────────────────────────────────────
 info "Checking dependencies..."
+
+if ! rpm -q openssh-server &>/dev/null; then
+    info "Installing openssh-server..."
+    dnf install -y openssh-server
+fi
+
 if ! rpm -q epel-release &>/dev/null; then
     info "Installing EPEL repository..."
     dnf install -y epel-release
@@ -34,33 +39,26 @@ if ! rpm -q fail2ban &>/dev/null; then
     dnf install -y fail2ban
 fi
 
-# ── USER SETUP ────────────────────────────────────────────────────────────────
-info "Processing users from $USERS_FILE..."
+# ── BACKUP ───────────────────────────────────────────────────────────────────
+info "Backing up existing sshd_config..."
+[[ -f /etc/ssh/sshd_config ]] && cp /etc/ssh/sshd_config "$BACKUP_DIR/sshd_config.$TIMESTAMP"
+
+# ── BUILD AllowUsers FROM users.txt ──────────────────────────────────────────
+info "Reading AllowUsers list from $USERS_FILE..."
 ALLOW_USERS=""
 while IFS= read -r user || [[ -n "$user" ]]; do
     [[ -z "$user" || "$user" == \#* ]] && continue
     user="$(echo "$user" | tr -d '[:space:]')"
-
-    if ! id "$user" &>/dev/null; then
-        useradd -m -s /bin/bash "$user"
-        info "Created Linux user: $user"
-        passwd "$user"
-    else
-        info "User already exists: $user"
-    fi
-
-    mkdir -p "/home/$user/.ssh"
-    chmod 700 "/home/$user/.ssh"
-    touch "/home/$user/.ssh/authorized_keys"
-    chmod 600 "/home/$user/.ssh/authorized_keys"
-    chown -R "$user:$user" "/home/$user/.ssh"
-    info "SSH directory configured for: $user"
-
     ALLOW_USERS="$ALLOW_USERS $user"
 done < "$USERS_FILE"
 
+[[ -z "$ALLOW_USERS" ]] && { error "No users found in $USERS_FILE."; exit 1; }
+info "AllowUsers will be set to:$ALLOW_USERS"
+
 # ── SSHD_CONFIG ───────────────────────────────────────────────────────────────
 info "Writing hardened sshd_config..."
+chattr -i /etc/ssh/sshd_config 2>/dev/null || true
+
 cat > /etc/ssh/sshd_config << 'EOF'
 Port 22
 AddressFamily inet
@@ -81,6 +79,7 @@ X11Forwarding no
 AllowAgentForwarding no
 AllowTcpForwarding no
 PermitTunnel no
+GatewayPorts no
 
 LogLevel VERBOSE
 SyslogFacility AUTHPRIV
@@ -92,9 +91,9 @@ HostKeyAlgorithms ssh-ed25519,rsa-sha2-512,rsa-sha2-256
 EOF
 
 echo "AllowUsers$ALLOW_USERS" >> /etc/ssh/sshd_config
-info "AllowUsers set to:$ALLOW_USERS"
 
-info "Testing sshd config..."
+# ── VALIDATE CONFIG ───────────────────────────────────────────────────────────
+info "Testing sshd_config..."
 if ! sshd -t; then
     error "sshd config test FAILED. Restoring backup."
     cp "$BACKUP_DIR/sshd_config.$TIMESTAMP" /etc/ssh/sshd_config
@@ -118,13 +117,13 @@ findtime = 600
 EOF
 
 # ── FIREWALL ──────────────────────────────────────────────────────────────────
-info "Configuring firewall..."
+info "Configuring firewall for SSH..."
 systemctl is-active firewalld &>/dev/null || systemctl start firewalld
 firewall-cmd --permanent --add-service=ssh
 firewall-cmd --permanent --add-rich-rule='rule service name="ssh" limit value="5/m" accept'
 firewall-cmd --reload
 
-# ── START SERVICES ────────────────────────────────────────────────────────────
+# ── START / RESTART SERVICES ──────────────────────────────────────────────────
 info "Enabling and starting services..."
 systemctl enable --now sshd
 systemctl restart sshd
@@ -132,12 +131,13 @@ systemctl enable --now fail2ban
 systemctl restart fail2ban
 
 # ── LOCK CONFIG ───────────────────────────────────────────────────────────────
-info "Locking sshd_config with chattr..."
+info "Locking sshd_config with chattr +i..."
 chattr +i /etc/ssh/sshd_config
 
 echo ""
-info "SSH setup complete. Backup at: $BACKUP_DIR/sshd_config.$TIMESTAMP"
-warn "To add authorized_keys for a user: vim /home/USERNAME/.ssh/authorized_keys"
+info "SSH service setup complete."
+info "Backup saved: $BACKUP_DIR/sshd_config.$TIMESTAMP"
+warn "Run create_ssh_users.sh to configure user accounts and authorized_keys."
 warn "To edit sshd_config later: chattr -i /etc/ssh/sshd_config"
 echo ""
 systemctl status sshd --no-pager -l
