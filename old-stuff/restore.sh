@@ -126,8 +126,8 @@ restore_users() {
 
 restore_firewall() {
     info "Re-applying firewall rules..."
-    firewall-cmd --permanent --add-service=sshd  2>/dev/null || true
-    firewall-cmd --permanent --add-service=smbd 2>/dev/null || true
+    firewall-cmd --permanent --add-service=ssh  2>/dev/null || true
+    firewall-cmd --permanent --add-service=samba 2>/dev/null || true
     firewall-cmd --reload
     info "Firewall rules applied."
 }

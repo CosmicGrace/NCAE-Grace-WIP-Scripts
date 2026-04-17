@@ -55,14 +55,11 @@ done < "$USERS_FILE"
 [[ -z "$ALLOW_USERS" ]] && { error "No users found in $USERS_FILE."; exit 1; }
 info "AllowUsers will be set to:$ALLOW_USERS"
 
-# ── SSHD_CONFIG — MERGE WITH EXISTING INSTEAD OF FULL OVERWRITE ─────────────
-info "Merging hardened settings with existing sshd_config..."
+# ── SSHD_CONFIG ───────────────────────────────────────────────────────────────
+info "Writing hardened sshd_config..."
 chattr -i /etc/ssh/sshd_config 2>/dev/null || true
 
-# Read existing config to preserve any custom settings
-if [[ -f /etc/ssh/sshd_config ]]; then
-    # Create temp file with hardened base config
-    cat > /etc/ssh/sshd_config.hardened << 'EOF'
+cat > /etc/ssh/sshd_config << 'EOF'
 Port 22
 AddressFamily inet
 
@@ -93,45 +90,7 @@ MACs hmac-sha2-512,hmac-sha2-256
 HostKeyAlgorithms ssh-ed25519,rsa-sha2-512,rsa-sha2-256
 EOF
 
-    # Append AllowUsers from users.txt
-    echo "AllowUsers$ALLOW_USERS" >> /etc/ssh/sshd_config.hardened
-
-    # Replace original with hardened version
-    mv /etc/ssh/sshd_config.hardened /etc/ssh/sshd_config
-else
-    # No existing config, create from scratch
-    cat > /etc/ssh/sshd_config << 'EOF'
-Port 22
-AddressFamily inet
-
-PubkeyAuthentication yes
-AuthorizedKeysFile .ssh/authorized_keys
-PasswordAuthentication yes
-PermitRootLogin no
-PermitEmptyPasswords no
-
-MaxAuthTries 3
-MaxSessions 5
-LoginGraceTime 30
-ClientAliveInterval 300
-ClientAliveCountMax 2
-
-X11Forwarding no
-AllowAgentForwarding no
-AllowTcpForwarding no
-PermitTunnel no
-GatewayPorts no
-
-LogLevel VERBOSE
-SyslogFacility AUTHPRIV
-
-KexAlgorithms curve25519-sha256,diffie-hellman-group14-sha256
-Ciphers aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr
-MACs hmac-sha2-512,hmac-sha2-256
-HostKeyAlgorithms ssh-ed25519,rsa-sha2-512,rsa-sha2-256
-EOF
-    echo "AllowUsers$ALLOW_USERS" >> /etc/ssh/sshd_config
-fi
+echo "AllowUsers$ALLOW_USERS" >> /etc/ssh/sshd_config
 
 # ── VALIDATE CONFIG ───────────────────────────────────────────────────────────
 info "Testing sshd_config..."
@@ -157,11 +116,11 @@ bantime  = 3600
 findtime = 600
 EOF
 
-# ── FIREWALL — USE sshd INSTEAD OF ssh ───────────────────────────────────────
+# ── FIREWALL ──────────────────────────────────────────────────────────────────
 info "Configuring firewall for SSH..."
 systemctl is-active firewalld &>/dev/null || systemctl start firewalld
-firewall-cmd --permanent --add-service=sshd
-firewall-cmd --permanent --add-rich-rule='rule service name="sshd" limit value="5/m" accept'
+firewall-cmd --permanent --add-service=ssh
+firewall-cmd --permanent --add-rich-rule='rule service name="ssh" limit value="5/m" accept'
 firewall-cmd --reload
 
 # ── START / RESTART SERVICES ──────────────────────────────────────────────────

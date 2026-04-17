@@ -60,14 +60,11 @@ done < "$USERS_FILE"
 VALID_USERS_TRIMMED="${VALID_USERS# }"
 info "valid users will be set to: $VALID_USERS_TRIMMED"
 
-# ── SMB.CONF — MERGE WITH EXISTING INSTEAD OF FULL OVERWRITE ────────────────
-info "Merging hardened settings with existing smb.conf..."
+# ── SMB.CONF ─────────────────────────────────────────────────────────────────
+info "Writing smb.conf..."
 chattr -i /etc/samba/smb.conf 2>/dev/null || true
 
-# Read existing config to preserve any custom settings
-if [[ -f /etc/samba/smb.conf ]]; then
-    # Create temp file with hardened base config
-    cat > /etc/samba/smb.conf.hardened << EOF
+cat > /etc/samba/smb.conf << EOF
 [global]
    workgroup = WORKGROUP
    server string = Competition Server
@@ -100,45 +97,6 @@ if [[ -f /etc/samba/smb.conf ]]; then
    directory mask = 0775
    force group = $SMB_GROUP
 EOF
-
-    # Replace original with hardened version
-    mv /etc/samba/smb.conf.hardened /etc/samba/smb.conf
-else
-    # No existing config, create from scratch
-    cat > /etc/samba/smb.conf << EOF
-[global]
-   workgroup = WORKGROUP
-   server string = Competition Server
-   netbios name = ROCKYVM
-   security = user
-   map to guest = never
-   restrict anonymous = 2
-
-   load printers = no
-   printing = bsd
-   printcap name = /dev/null
-   disable spoolss = yes
-
-   server min protocol = SMB2
-   server max protocol = SMB3
-   ntlm auth = ntlmv2-only
-
-   log file = /var/log/samba/log.%m
-   log level = 2
-   max log size = 1000
-
-[$SHARE_NAME]
-   comment = Competition Share
-   path = $SHARE_PATH
-   valid users = $VALID_USERS_TRIMMED
-   read only = no
-   writable = yes
-   browseable = yes
-   create mask = 0664
-   directory mask = 0775
-   force group = $SMB_GROUP
-EOF
-fi
 
 # ── VALIDATE CONFIG ───────────────────────────────────────────────────────────
 info "Testing smb.conf..."
@@ -157,10 +115,10 @@ setsebool -P samba_export_all_rw on
 info "Verifying SELinux context:"
 ls -Z "$SHARE_PATH"
 
-# ── FIREWALL — USE smbd INSTEAD OF samba ─────────────────────────────────────
+# ── FIREWALL ──────────────────────────────────────────────────────────────────
 info "Configuring firewall for Samba..."
 systemctl is-active firewalld &>/dev/null || systemctl start firewalld
-firewall-cmd --permanent --add-service=smbd
+firewall-cmd --permanent --add-service=samba
 firewall-cmd --reload
 
 # ── START / RESTART SERVICES ──────────────────────────────────────────────────

@@ -40,26 +40,26 @@ for svc in sshd smbd nmbd fail2ban firewalld; do
     fi
 done
 
-# ── 2. FIREWALL CHECK — USE sshd AND smbd INSTEAD OF ssh/samba ──────────────
+# ── 2. FIREWALL CHECK ─────────────────────────────────────────────────────────
 echo "" | tee -a "$LOG_FILE"
 check "=== FIREWALL RULES ==="
 
-if ! firewall-cmd --list-services 2>/dev/null | grep -q "sshd"; then
-    error "sshd not in firewall rules! Re-adding..."
-    firewall-cmd --permanent --add-service=sshd
+if ! firewall-cmd --list-services 2>/dev/null | grep -q "ssh"; then
+    error "SSH not in firewall rules! Re-adding..."
+    firewall-cmd --permanent --add-service=ssh
     firewall-cmd --reload
     ISSUES_FOUND=$((ISSUES_FOUND + 1))
 else
-    info "sshd firewall rule present."
+    info "SSH firewall rule present."
 fi
 
-if ! firewall-cmd --list-services 2>/dev/null | grep -q "smbd"; then
-    error "smbd not in firewall rules! Re-adding..."
-    firewall-cmd --permanent --add-service=smbd
+if ! firewall-cmd --list-services 2>/dev/null | grep -q "samba"; then
+    error "Samba not in firewall rules! Re-adding..."
+    firewall-cmd --permanent --add-service=samba
     firewall-cmd --reload
     ISSUES_FOUND=$((ISSUES_FOUND + 1))
 else
-    info "smbd firewall rule present."
+    info "Samba firewall rule present."
 fi
 
 # ── 3. SSHD_CONFIG INTEGRITY ──────────────────────────────────────────────────
