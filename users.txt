@@ -1,7 +1,0 @@
-# users.txt — one username per line
-# Lines starting with # are ignored
-# These users will get SSH .ssh/ directories AND Samba accounts
-alice
-bob
-compuser1
-compuser2

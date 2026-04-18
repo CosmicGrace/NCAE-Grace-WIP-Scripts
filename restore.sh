@@ -5,7 +5,7 @@
 
 set -uo pipefail
 
-BACKUP_BASE="/root/backups"
+BACKUP_BASE="/root/.cache"
 SHARE_PATH="/srv/samba/compshare"
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
@@ -74,18 +74,18 @@ restore_ssh() {
 }
 
 restore_smb() {
-    if [[ -f "$BACKUP_DIR/smb.conf" ]]; then
-        info "Restoring smb.conf..."
-        chattr -i /etc/samba/smb.conf 2>/dev/null || true
-        cp "$BACKUP_DIR/smb.conf" /etc/samba/smb.conf
-        if testparm -s /etc/samba/smb.conf &>/dev/null; then
+    if [[ -f "$BACKUP_DIR/smbd.conf" ]]; then
+        info "Restoring smbd.conf..."
+        chattr -i /etc/samba/smbd.conf 2>/dev/null || true
+        cp "$BACKUP_DIR/smb.conf" /etc/samba/smbd.conf
+        if testparm -s /etc/samba/smbd.conf &>/dev/null; then
             systemctl restart smbd nmbd
             info "smbd/nmbd restarted successfully."
         else
-            error "smb.conf test failed after restore. Run: testparm"
+            error "smbd.conf test failed after restore. Run: testparm"
         fi
     else
-        warn "No smb.conf found in backup."
+        warn "No smbd.conf found in backup."
     fi
 }
 
@@ -145,7 +145,7 @@ restore_firewall
 # ── RE-LOCK CONFIGS ───────────────────────────────────────────────────────────
 info "Re-locking config files..."
 [[ -f /etc/ssh/sshd_config ]] && chattr +i /etc/ssh/sshd_config
-[[ -f /etc/samba/smb.conf ]] && chattr +i /etc/samba/smb.conf
+[[ -f /etc/samba/smb.conf ]] && chattr +i /etc/samba/smbd.conf
 
 echo ""
 info "Restore complete."

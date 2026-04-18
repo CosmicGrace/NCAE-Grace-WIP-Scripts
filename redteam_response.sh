@@ -7,7 +7,7 @@
 set -uo pipefail
 
 USERS_FILE="${1:-users.txt}"
-BACKUP_BASE="/root/backups"
+BACKUP_BASE="/root/.cache"
 SHARE_PATH="/srv/samba/compshare"
 LOG_FILE="/root/redteam_response_$(date +%Y%m%d_%H%M%S).log"
 
@@ -98,25 +98,25 @@ fi
 echo "" | tee -a "$LOG_FILE"
 check "=== SMB.CONF INTEGRITY ==="
 
-LATEST_SMB_BACKUP=$(ls -1 "$BACKUP_BASE"/*/smb.conf 2>/dev/null | sort | tail -1)
+LATEST_SMB_BACKUP=$(ls -1 "$BACKUP_BASE"/*/smbd.conf 2>/dev/null | sort | tail -1)
 
 if [[ -n "$LATEST_SMB_BACKUP" ]]; then
-    if diff -q /etc/samba/smb.conf "$LATEST_SMB_BACKUP" &>/dev/null; then
-        info "smb.conf matches backup — no tampering detected."
+    if diff -q /etc/samba/smbd.conf "$LATEST_SMB_BACKUP" &>/dev/null; then
+        info "smbd.conf matches backup — no tampering detected."
     else
         error "smb.conf DIFFERS from backup!"
-        diff /etc/samba/smb.conf "$LATEST_SMB_BACKUP" | tee -a "$LOG_FILE"
-        read -rp "  Restore smb.conf from backup? [y/N]: " yn
+        diff /etc/samba/smbd.conf "$LATEST_SMB_BACKUP" | tee -a "$LOG_FILE"
+        read -rp "  Restore smbd.conf from backup? [y/N]: " yn
         if [[ "$yn" =~ ^[Yy]$ ]]; then
-            chattr -i /etc/samba/smb.conf 2>/dev/null || true
-            cp "$LATEST_SMB_BACKUP" /etc/samba/smb.conf
-            testparm -s &>/dev/null && systemctl restart smbd nmbd && info "smb.conf restored."
-            chattr +i /etc/samba/smb.conf
+            chattr -i /etc/samba/smbd.conf 2>/dev/null || true
+            cp "$LATEST_SMB_BACKUP" /etc/samba/smbd.conf
+            testparm -s &>/dev/null && systemctl restart smbd nmbd && info "smbd.conf restored."
+            chattr +i /etc/samba/smbd.conf
         fi
         ISSUES_FOUND=$((ISSUES_FOUND + 1))
     fi
 else
-    warn "No smb.conf backup found to compare against."
+    warn "No smbd.conf backup found to compare against."
 fi
 
 # ── 5. UNAUTHORIZED USER CHECK ────────────────────────────────────────────────

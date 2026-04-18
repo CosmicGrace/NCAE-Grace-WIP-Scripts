@@ -28,11 +28,11 @@ fi
 # ── SSH ───────────────────────────────────────────────────────────────────────
 info "Backing up SSH configuration..."
 [[ -f /etc/ssh/sshd_config ]] && cp /etc/ssh/sshd_config "$BACKUP_DIR/sshd_config"
-[[ -d /etc/ssh ]] && tar -czf "$BACKUP_DIR/ssh_keys.tar.gz" -C /etc ssh/ssh_host_* 2>/dev/null || true
+[[ -d /etc/ssh ]] && tar -czf "$BACKUP_DIR/ssh_keys.tar.gz" -C /etc/ssh/ssh_host_* 2>/dev/null || true
 
 # ── SMB CONFIG ────────────────────────────────────────────────────────────────
 info "Backing up Samba configuration..."
-[[ -f /etc/samba/smb.conf ]] && cp /etc/samba/smb.conf "$BACKUP_DIR/smb.conf"
+[[ -f /etc/samba/smb.conf ]] && cp /etc/samba/smbd.conf "$BACKUP_DIR/smbd.conf"
 
 # ── SYSTEM USER DATABASES ─────────────────────────────────────────────────────
 info "Backing up user databases..."
@@ -50,6 +50,15 @@ fi
 [[ -f /var/lib/samba/private/passdb.tdb ]] && \
     cp /var/lib/samba/private/passdb.tdb "$BACKUP_DIR/passdb.tdb"
 
+# ── /MTN/FILES ────────────────────────────────────────────────────────────────
+if [[ -d "/mnt/files" ]]; then
+    info "Backing up /mnt/files..."
+    tar -czf "$BACKUP_DIR/mnt_files.tar.gz" -C /mnt files
+    info "/mnt/files backup: $BACKUP_DIR/mnt_files.tar.gz"
+else
+    warn "Path /mnt/files not found. Skipping."
+fi
+
 # ── AUTHORIZED_KEYS ───────────────────────────────────────────────────────────
 info "Backing up authorized_keys for all users..."
 mkdir -p "$BACKUP_DIR/authorized_keys"
@@ -61,7 +70,7 @@ done < /etc/passwd
 # ── SMB SHARE CONTENTS ────────────────────────────────────────────────────────
 if [[ -d "$SHARE_PATH" ]]; then
     info "Backing up SMB share contents..."
-    tar -czf "$BACKUP_DIR/compshare.tar.gz" -C /srv/samba compshare
+    tar -czf "$BACKUP_DIR/compshare.tar.gz" -C /srv/samba/compshare
     info "Share backup: $BACKUP_DIR/compshare.tar.gz"
 else
     warn "Share path $SHARE_PATH not found. Skipping."
