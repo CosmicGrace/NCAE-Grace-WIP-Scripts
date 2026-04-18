@@ -1,7 +1,0 @@
-# smb_files.txt — files to pre-populate in the SMB share
-# Format: filename|exact file content
-# Lines starting with # are ignored
-# The content after | must match EXACTLY what the competition grader expects
-readme.txt|This is the official readme for the competition share.
-flag.txt|NCAE{competition_flag_content_here}
-notes.txt|Service configuration notes for grading validation.
