@@ -1,4 +1,6 @@
 #!/bin/bash
+# NCAE - CosmicGrace
+# Author - Claude (Anthropic) / CosmicGrace
 # =============================================================================
 # watchdog.sh — Blue Team Persistence and Service Guardian
 # =============================================================================

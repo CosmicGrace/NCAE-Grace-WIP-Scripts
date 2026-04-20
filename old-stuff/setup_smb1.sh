@@ -1,4 +1,6 @@
 #!/bin/bash
+# NCAE - CosmicGrace
+# Author - Claude (Anthropic) / CosmicGrace
 # setup_smb.sh — Samba service configuration and hardening
 # Handles: smb.conf, share directory, SELinux, firewall
 # Does NOT create users or pre-populate files

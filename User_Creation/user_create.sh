@@ -1,6 +1,6 @@
 #!/bin/bash
 # NCAE - CosmicGrace
-
+# Author - Claude (Anthropic) / CosmicGrace
 # user_create.sh - Mass user creation with SSH key setup and security lockdown
 # Usage: sudo ./user_create.sh users.txt "password"
 

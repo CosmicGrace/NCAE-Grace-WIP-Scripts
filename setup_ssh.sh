@@ -1,4 +1,6 @@
 #!/bin/bash
+# NCAE - CosmicGrace
+# Author - Claude (Anthropic) / CosmicGrace
 # =============================================================================
 # setup_ssh.sh — SSH Service Configuration and Hardening
 # =============================================================================

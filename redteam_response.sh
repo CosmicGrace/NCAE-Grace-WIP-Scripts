@@ -1,4 +1,6 @@
 #!/bin/bash
+# NCAE - CosmicGrace
+# Author - Claude (Anthropic) / CosmicGrace
 # redteam_response.sh — Detect red team activity and restore services
 # Usage: sudo ./redteam_response.sh [users_file]
 # Default users file: users.txt

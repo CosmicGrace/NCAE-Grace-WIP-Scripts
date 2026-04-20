@@ -1,4 +1,6 @@
 #!/bin/bash
+# NCAE - CosmicGrace
+# Author - Claude (Anthropic) / CosmicGrace
 # create_all_users.sh — Create Linux users, Samba accounts, and SSH directories
 # Handles: useradd, smbpasswd, smbgroup membership, .ssh/ authorized_keys
 # Does NOT touch smbd.conf or sshd_config — run setup scripts for those

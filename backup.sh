@@ -1,4 +1,6 @@
 #!/bin/bash
+# NCAE - CosmicGrace
+# Author - Claude (Anthropic) / CosmicGrace
 # backup.sh — Backs up SSH configs, SMB configs, user databases, and share contents
 # Usage: sudo ./backup.sh
 

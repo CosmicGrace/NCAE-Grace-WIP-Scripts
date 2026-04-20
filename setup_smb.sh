@@ -1,4 +1,6 @@
 #!/bin/bash
+# NCAE - CosmicGrace
+# Author - Claude (Anthropic) / CosmicGrace
 # =============================================================================
 # setup_smb.sh — Samba/SMB Service Configuration and Hardening
 # =============================================================================

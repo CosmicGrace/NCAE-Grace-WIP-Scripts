@@ -1,4 +1,6 @@
 #!/bin/bash
+# NCAE - CosmicGrace
+# Author - Claude (Anthropic) / CosmicGrace
 
 # Prompt for password (hidden input)
 read -s -p "Enter new password: " PASSWORD

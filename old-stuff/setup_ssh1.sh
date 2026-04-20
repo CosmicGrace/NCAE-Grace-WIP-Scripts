@@ -1,4 +1,6 @@
 #!/bin/bash
+# NCAE - CosmicGrace
+# Author - Claude (Anthropic) / CosmicGrace
 # setup_ssh.sh — SSH service configuration and hardening
 # Handles: sshd_config, fail2ban, firewall
 # Does NOT create users — run create_ssh_users.sh first

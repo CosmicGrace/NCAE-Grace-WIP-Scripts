@@ -1,4 +1,6 @@
 #!/bin/bash
+# NCAE - CosmicGrace
+# Author - Claude (Anthropic) / CosmicGrace
 # restore.sh — Restore SSH and/or SMB from a timestamped backup
 # Usage: sudo ./restore.sh [backup_timestamp]
 # If no timestamp given, lists available backups and prompts.
